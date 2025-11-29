@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday My Love</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: #fdf2f8; /* Pink-50 */
+            overflow-x: hidden;
+        }
+        .font-cursive {
+            font-family: 'Great Vibes', cursive;
+        }
+        .fade-in-up {
+            animation: fadeInUp 1s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Floating Hearts Animation */
+        .heart {
+            position: fixed;
+            top: -10vh;
+            transform: translateY(0);
+            animation: fall 10s linear infinite;
+            z-index: 0;
+            opacity: 0.6;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(110vh);
+            }
+        }
+        
+        .paper-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const SongPlayer = ({ isPlaying, togglePlay }) => {
+            const audioRef = useRef(null);
+
+            useEffect(() => {
+                if (audioRef.current) {
+                    if (isPlaying) {
+                        audioRef.current.play().catch(e => console.log("Audio play failed (user interaction needed first)", e));
+                    } else {
+                        audioRef.current.pause();
+                    }
+                }
+            }, [isPlaying]);
+
+            return (
+                <div className="fixed bottom-4 right-4 z-50">
+                    <audio ref={audioRef} loop>
+                        <source src="Ed Sheeran - Hearts Don't Break Round Here [Official Audio].mp3" type="audio/mpeg" />
+                    </audio>
+                    <button 
+                        onClick={togglePlay}
+                        className="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-pink-100 transition-all text-pink-600 border-2 border-pink-200"
+                    >
+                        {isPlaying ? (
+                            <i data-lucide="pause" className="w-6 h-6"></i>
+                        ) : (
+                            <i data-lucide="music" className="w-6 h-6"></i>
+                        )}
+                    </button>
+                </div>
+            );
+        };
+
+        const FloatingHeart = ({ delay, left, size }) => {
+            const style = {
+                left: `${left}%`,
+                animationDelay: `${delay}s`,
+                fontSize: `${size}px`,
+                color: `rgba(236, 72, 153, ${Math.random() * 0.5 + 0.2})` 
+            };
+            return <div className="heart font-cursive" style={style}>❤</div>;
+        };
+
+        const Section = ({ image, title, text, reverse }) => {
+            const [isVisible, setIsVisible] = useState(false);
+            const domRef = useRef();
+
+            useEffect(() => {
+                const observer = new IntersectionObserver(entries => {
+                    entries.forEach(entry => setIsVisible(entry.isIntersecting));
+                });
+                observer.observe(domRef.current);
+                return () => observer.disconnect();
+            }, []);
+
+            return (
+                <div 
+                    ref={domRef}
+                    className={`min-h-screen flex flex-col md:flex-row items-center justify-center p-6 md:p-20 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                >
+                    <div className={`flex flex-col md:flex-row items-center max-w-6xl w-full gap-12 ${reverse ? 'md:flex-row-reverse' : ''}`}>
+                        
+                        {/* Image Container */}
+                        <div className="w-full md:w-1/2 relative group">
+                            <div className="absolute inset-0 bg-pink-200 transform rotate-3 rounded-lg opacity-50 group-hover:rotate-6 transition-transform duration-500"></div>
+                            <div className="absolute inset-0 bg-pink-300 transform -rotate-2 rounded-lg opacity-50 group-hover:-rotate-4 transition-transform duration-500"></div>
+                            <img 
+                                src={image} 
+                                alt="Memory" 
+                                className="relative w-full rounded-lg paper-shadow transform transition-transform duration-500 hover:scale-[1.02] z-10 bg-white"
+                            />
+                        </div>
+
+                        {/* Text Container */}
+                        <div className="w-full md:w-1/2 text-center md:text-left space-y-6">
+                            <h2 className="font-cursive text-5xl md:text-6xl text-pink-600 mb-4">{title}</h2>
+                            <div className="bg-white/60 backdrop-blur-sm p-8 rounded-xl shadow-sm border border-pink-100">
+                                <p className="text-gray-700 text-lg md:text-xl leading-relaxed italic font-light">
+                                    {text}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Intro = ({ onStart }) => {
+            return (
+                <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-pink-100 via-white to-pink-200 relative overflow-hidden">
+                    <div className="z-10 text-center space-y-8 p-4">
+                        <div className="animate-bounce mb-4 text-6xl">🎁</div>
+                        <h1 className="font-cursive text-7xl md:text-9xl text-pink-600 drop-shadow-sm fade-in-up">
+                            Happy Birthday
+                        </h1>
+                        <p className="text-2xl text-gray-600 font-light fade-in-up" style={{animationDelay: '0.3s'}}>
+                            To my Queen, my Love, my Everything.
+                        </p>
+                        <button 
+                            onClick={onStart}
+                            className="mt-12 px-10 py-4 bg-pink-500 hover:bg-pink-600 text-white rounded-full text-xl shadow-xl transition-all transform hover:scale-105 fade-in-up flex items-center gap-3 mx-auto"
+                            style={{animationDelay: '0.6s'}}
+                        >
+                            <span>Open Your Gift</span>
+                            <i data-lucide="heart" className="w-5 h-5 fill-current"></i>
+                        </button>
+                    </div>
+                    
+                    {/* Background decorations */}
+                    <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                        {[...Array(20)].map((_, i) => (
+                            <FloatingHeart key={i} delay={Math.random() * 5} left={Math.random() * 100} size={Math.random() * 30 + 20} />
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [started, setStarted] = useState(false);
+            const [playing, setPlaying] = useState(false);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [started]);
+
+            const handleStart = () => {
+                setStarted(true);
+                setPlaying(true);
+            };
+
+            const memories = [
+                {
+                    image: "1.png",
+                    title: "A Dream Come True",
+                    text: "Loving you feels like a beautiful dream that I never want to wake up from. Every day with you is a celebration of love, laughter, and endless happiness.",
+                    reverse: false
+                },
+                {
+                    image: "2.png",
+                    title: "Simply You",
+                    text: "It's the little things—the way you laugh, the way you care, the way you just are. Everything about you is simply perfect to me. You are my greatest blessing.",
+                    reverse: true
+                },
+                {
+                    image: "3.png",
+                    title: "My Heart's Home",
+                    text: "Wherever you are, that's where my home is. My heart found its safe place in you, and I promise to cherish and protect it forever.",
+                    reverse: false
+                },
+                {
+                    image: "4.png",
+                    title: "Endless Love",
+                    text: "My love for you is a journey; starting at forever and ending at never. It is a promise that I will always be by your side, through thick and thin.",
+                    reverse: true
+                },
+                {
+                    image: "5.png",
+                    title: "A Beautiful Future",
+                    text: "I look forward to all of our tomorrows. Building a future with you is my greatest adventure, and I can't wait to see what beautiful moments life has in store for us.",
+                    reverse: false
+                },
+                {
+                    image: "6.png",
+                    title: "You Are Magic",
+                    text: "There is something truly magical about you. You have this incredible way of making everything around you seem brighter, happier, and more full of life.",
+                    reverse: true
+                },
+                {
+                    image: "7.png",
+                    title: "Grateful for You",
+                    text: "I am so incredibly grateful for your presence in my life. You've taught me what it means to love unconditionally, and for that, I will always be thankful.",
+                    reverse: false
+                },
+                {
+                    image: "8.png",
+                    title: "My Best Friend",
+                    text: "Not only are you the love of my life, but you are also my best friend. I can't imagine going through life's ups and downs with anyone else but you.",
+                    reverse: true
+                },
+                {
+                    image: "10.png",
+                    title: "Happy Birthday, Beautiful",
+                    text: "So today, on your special day, I want to remind you how deeply loved you are. May your birthday be as amazing and as beautiful as you are to me. I love you.",
+                    reverse: false
+                },
+                {
+                    image: "11.png",
+                    title: "Destiny",
+                    text: "Looking back at us, I realize something beautiful: I knew it from the very start. No matter what happened, it was always going to be you. My heart recognized yours before my mind even caught up.",
+                    reverse: true
+                },
+                {
+                    image: "12.png",
+                    title: "One & Only",
+                    text: "My one and only. Every moment with you feels like a treasure I want to keep forever. I don't just love you for who you are, but for who I am when I am with you.",
+                    reverse: false
+                },
+                {
+                    image: "13.png",
+                    title: "Angel on Earth",
+                    text: "I pray for this smile daily. You are an angel indeed, walking on this earth, gracing my life with your presence. Your happiness is my priority, today and always.",
+                    reverse: true
+                },
+                {
+                    image: "14.png",
+                    title: "My Light",
+                    text: "You truly are the light of my life. Even on the darkest days, your smile is the sun that breaks through the clouds. I am so incredibly lucky to be the one who gets to see that smile every day.",
+                    reverse: false
+                },
+                {
+                    image: "15.png",
+                    title: "My Everything",
+                    text: "I love you so much. You are my everything, my one true love. Life just makes sense when you are by my side. You are the missing piece I didn't know I needed.",
+                    reverse: true
+                },
+                {
+                    image: "16.png",
+                    title: "In Any Universe",
+                    text: "Whether in this world or an anime world, I'd choose you every single time. I just love this picture of us, but I love the reality of us even more. You make life feel like a fantasy.",
+                    reverse: false
+                },
+                {
+                    image: "17.png",
+                    title: "The Standard",
+                    text: "I get protective because I know exactly what I have. I look at others and think, 'They don't know what true love looks like.' You set the standard, baby. I love everything about you.",
+                    reverse: true
+                },
+                {
+                    image: "18.png",
+                    title: "Forever Us",
+                    text: "I pray that you, my angel, get a long life so we can spend it all together. Every Saturday, every weekday, every moment—I want to spend it making memories with you.",
+                    reverse: false
+                },
+                {
+                    image: "19.png",
+                    title: "My Queen",
+                    text: "Happy Birthday, my love! Seeing you happy is my favorite thing in the world. As you turn a year older, I want you to know that you are the most precious gift I have ever received. May this year be as beautiful as your soul.",
+                    reverse: true
+                },
+                {
+                    image: "Back Cover Page.png",
+                    title: "Good Times",
+                    text: "Here's to the good times we've had, and the lifetime of memories waiting for us. Happy Birthday, baby. I love you more than words can say.",
+                    reverse: false
+                }
+            ];
+
+            if (!started) {
+                return <Intro onStart={handleStart} />;
+            }
+
+            return (
+                <div className="relative">
+                    <SongPlayer isPlaying={playing} togglePlay={() => setPlaying(!playing)} />
+                    
+                    {/* Background ambiance */}
+                    <div className="fixed inset-0 pointer-events-none">
+                        {[...Array(15)].map((_, i) => (
+                            <FloatingHeart key={i} delay={Math.random() * 10} left={Math.random() * 100} size={Math.random() * 20 + 10} />
+                        ))}
+                    </div>
+
+                    <div className="container mx-auto pb-20">
+                        {memories.map((memory, index) => (
+                            <Section 
+                                key={index}
+                                image={memory.image}
+                                title={memory.title}
+                                text={memory.text}
+                                reverse={memory.reverse}
+                            />
+                        ))}
+                        
+                        <div className="h-screen flex items-center justify-center text-center p-8">
+                            <div className="space-y-6">
+                                <h1 className="font-cursive text-6xl text-pink-600">I Love You</h1>
+                                <p className="text-gray-500">Forever & Always</p>
+                                <div className="text-4xl animate-pulse">❤️</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
